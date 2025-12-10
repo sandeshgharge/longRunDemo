@@ -1,73 +1,60 @@
-# React + TypeScript + Vite
+# longRunDemo
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Project Overview**
+- **Description:** This React + Vite project displays a paginated list of products (inventory) with server-side filtering, sorting, and pagination.
+- **Backend:** Uses Supabase as the data backend (Postgres) for queries and counts.
+- **Styling/UI:** Tailwind CSS with Material Tailwind components available in `@material-tailwind/react`.
 
-Currently, two official plugins are available:
+**Features**
+- **Filtering:** Search by name, filter by category, price range, and in-stock status — all executed server-side.
+- **Sorting:** Sort by `name`, `price`, `stock_quantity`, `created_at`, `category` (asc/desc).
+- **Pagination:** Server-side page range queries with total count for UI pagination.
+- **Supabase:** Queries built with Supabase client in `src/hooks/useProducts.ts`.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+**Important Files**
+- `src/pages/ProductsPage.tsx`: Main products list page and UI controls.
+- `src/hooks/useProducts.ts`: Server-side query builder (filters, sort, pagination).
+- `tailwind.config.cjs`, `postcss.config.cjs`: Tailwind + PostCSS config.
+- `src/index.css`: Tailwind directives and global styles.
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+**Local Setup**
+- Prerequisites: `node` (LTS) and `npm` installed.
+- Install deps:
+```powershell
+npm install
+```
+- Run dev server:
+```powershell
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+**Links**
+The default page can be viewed via below link on local server- 
+http://localhost:5173/productPage
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Vercel server link is as below-
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+
+**Supabase Setup (brief)**
+- Create a Supabase project and a `products` table with columns matching `ProductDetails` used in the app (e.g., `id`, `name`, `category`, `price`, `stock_quantity`, `created_at`).
+- Add your Supabase keys to a local `.env` file (do NOT commit):
 ```
+VITE_SUPABASE_URL=https://<project>.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJ...yourAnonKey
+```
+- The app reads `src/lib/supabase.ts` to initialize the client using `import.meta.env.VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
+
+**How filtering/sorting/pagination works**
+- The UI manages filter/sort state in `ProductsPage` and calls `fetchProducts()` in `src/hooks/useProducts.ts`.
+- `fetchProducts()` constructs a Supabase query that applies the filters (`ilike`, `eq`, `gte`, `lte`), `order()` for sorting, and `.range(from, to)` for pagination, returning `{ rows, total }`.
+
+**Development notes**
+- Tailwind is configured via `postcss.config.cjs` and `tailwind.config.cjs`. If you encounter PostCSS/Tailwind errors, ensure `@tailwindcss/postcss`, `tailwindcss`, and `autoprefixer` are installed.
+- Material Tailwind utilities are wrapped via `withMT()` in `tailwind.config.cjs` so Material components work with Tailwind classes.
+
+**Contributing**
+- Add a `.gitignore` with `node_modules/`, `.env`, and build outputs before committing.
+- Create a feature branch, open a PR, and run tests/linting where applicable.
+
+**License**
+- (Add a license if you want — MIT recommended for public projects.)

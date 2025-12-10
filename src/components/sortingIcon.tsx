@@ -1,8 +1,6 @@
-import type { ProductDetails } from "../entities/productDetails";
-
 type SortDir = "asc" | "desc";
 
-function SortIcon({ active, dir }: { active: boolean; dir: SortDir }) {
+export function SortIcon({ active, dir }: { active: boolean; dir: SortDir }) {
 
     if (!active) {
         return (

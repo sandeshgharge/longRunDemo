@@ -29,3 +29,10 @@ export async function fetchProducts(opts: {
     if (error) throw error
     return { rows: data ?? [], total: count ?? 0 }
 }
+
+export async function fetchCategories() {
+    let q = supabase.from('products').select('category')
+    const { data, error } = await q
+    if (error) throw error
+    return data?.map((row) => row.category) ?? []
+}
