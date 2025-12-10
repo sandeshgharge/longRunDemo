@@ -1,5 +1,10 @@
 import { supabase } from '../lib/supabase'
-export type SortKey = 'name' | 'price' | 'stock_quantity' | 'created_at'
+export type SortKey =
+  | 'name'
+  | 'price'
+  | 'stock_quantity'
+  | 'created_at'
+  | 'category';
 
 
 export async function fetchProducts(opts: {
