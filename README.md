@@ -47,14 +47,3 @@ VITE_SUPABASE_ANON_KEY=eyJ...yourAnonKey
 **How filtering/sorting/pagination works**
 - The UI manages filter/sort state in `ProductsPage` and calls `fetchProducts()` in `src/hooks/useProducts.ts`.
 - `fetchProducts()` constructs a Supabase query that applies the filters (`ilike`, `eq`, `gte`, `lte`), `order()` for sorting, and `.range(from, to)` for pagination, returning `{ rows, total }`.
-
-**Development notes**
-- Tailwind is configured via `postcss.config.cjs` and `tailwind.config.cjs`. If you encounter PostCSS/Tailwind errors, ensure `@tailwindcss/postcss`, `tailwindcss`, and `autoprefixer` are installed.
-- Material Tailwind utilities are wrapped via `withMT()` in `tailwind.config.cjs` so Material components work with Tailwind classes.
-
-**Contributing**
-- Add a `.gitignore` with `node_modules/`, `.env`, and build outputs before committing.
-- Create a feature branch, open a PR, and run tests/linting where applicable.
-
-**License**
-- (Add a license if you want — MIT recommended for public projects.)
