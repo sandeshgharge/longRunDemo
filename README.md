@@ -33,7 +33,7 @@ The default page can be viewed via below link on local server-
 http://localhost:5173/productPage
 
 Vercel server link is as below-
-
+https://long-run-demo.vercel.app/productPage
 
 **Supabase Setup (brief)**
 - Create a Supabase project and a `products` table with columns matching `ProductDetails` used in the app (e.g., `id`, `name`, `category`, `price`, `stock_quantity`, `created_at`).
