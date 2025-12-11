@@ -71,6 +71,10 @@ export default function ProductPage() {
         });
     }, []);
 
+    useEffect(() => {
+        document.title = "Inventory Management";
+    }, []);
+
     /**
      * Table headers state
      * This state variable holds the configuration for the table headers,
@@ -357,14 +361,14 @@ export default function ProductPage() {
                                             <button className={`join-item btn ${page === i + 1 ? 'btn-active' : ''}`} onClick={() => setPage(i + 1)}>{i + 1}</button>
                                         </>
                                     )
-                                        
+
                                     )}
                                 </div>
 
                             </td>
                             <td></td>
                             <td></td>
-                            
+
                             <td colSpan={2}>
                                 <div className="join grid grid-cols-2 justify-end">
                                     <button className="join-item btn btn-outline" onClick={() => handlePageClick(page - 1, 0)}>Previous page</button>
