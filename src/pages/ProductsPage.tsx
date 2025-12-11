@@ -7,6 +7,14 @@ import { SortIcon } from "../components/sortingIcon";
 import { SearchField } from "../components/searchField";
 
 /**
+ * Utility function to generate a range of numbers
+ * @param start - The start of the range (inclusive)
+ * @param end - The end of the range (exclusive)
+ * @returns An array of numbers from start to end
+ */
+
+
+/**
  * Table header interface
  * This interface defines the structure for table headers used in the ProductsPage component.
  * The data is used to render sortable table headers.
@@ -161,6 +169,7 @@ export default function ProductPage() {
         setPage(pageNum);
 
     }
+
 
     /**
      * This method handles name search input changes.
@@ -343,24 +352,19 @@ export default function ProductPage() {
                         <tr>
                             <td colSpan={2}>
                                 <div className="join">
-                                    <button className="join-item btn" onClick={() => handlePageClick(paginationNumber, -1)}>{paginationNumber}</button>
-                                    <button className="join-item btn" onClick={() => handlePageClick(paginationNumber + 1, 1)}>{paginationNumber + 1}</button>
-
-                                    {pageCount - paginationNumber > 3 && (
+                                    {[...Array(pageCount)].map((_, i) => (
                                         <>
-
-                                            <button className="join-item btn btn-disabled">...</button>
-                                            <button className="join-item btn" onClick={() => handlePageClick(pageCount - 1, 0)}>{pageCount - 1}</button>
-                                            <button className="join-item btn" onClick={() => handlePageClick(pageCount, 0)}>{pageCount}</button>
+                                            <button className={`join-item btn ${page === i + 1 ? 'btn-active' : ''}`} onClick={() => setPage(i + 1)}>{i + 1}</button>
                                         </>
                                     )
-
-                                    }
-
+                                        
+                                    )}
                                 </div>
+
                             </td>
                             <td></td>
                             <td></td>
+                            
                             <td colSpan={2}>
                                 <div className="join grid grid-cols-2 justify-end">
                                     <button className="join-item btn btn-outline" onClick={() => handlePageClick(page - 1, 0)}>Previous page</button>
