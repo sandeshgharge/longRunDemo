@@ -1,10 +1,12 @@
 // src/pages/ProductPage.tsx
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { fetchCategories, fetchProducts, type SortKey } from "../hooks/useProducts"
-import type { ProductDetails } from "../entities/productDetails";
+import { fetchCategories, type SortKey } from "../hooks/useProducts"
 import { SortIcon } from "../components/sortingIcon";
 import { SearchField } from "../components/searchField";
+
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchFilteredProducts, selectAllProducts, selectProductStatus, selectProductError, selectProductCount } from "../features/product/productSlice";
 
 /**
  * Utility function to generate a range of numbers
@@ -35,11 +37,17 @@ interface TableHeader {
 
 //export default function ProductPage({ initialProducts }: { initialProducts: ProductDetails[],  count : number }) {
 
-export default function ProductPage() {
-    const [products, setProducts] = useState<ProductDetails[]>([]);
+export default function ReduxProductPage() {
+
+    const dispatch = useDispatch();
+    const products = useSelector(selectAllProducts);
+    const productStatus = useSelector(selectProductStatus);
+    const productError = useSelector(selectProductError);
+    const totalProducts = useSelector(selectProductCount);
+
     const [page, setPage] = useState(1);
 
-    const [limit] = useState(10);
+    const limit = 10;
     const [sortKey, setSortKey] = useState<SortKey>("name");
     const [asc, setAsc] = useState(true);
     const [term, setTerm] = useState<string | undefined>(undefined);
@@ -47,11 +55,11 @@ export default function ProductPage() {
     const [priceMin, setPriceMin] = useState<number | undefined>(undefined);
     const [priceMax, setPriceMax] = useState<number | undefined>(undefined);
     const [inStock, setInStock] = useState<boolean | undefined>(undefined);
-    const [pageCount, setPageCount] = useState<number>(0);
     const [paginationNumber, setPaginationNumber] = useState<number>(0);
     const [selectCategory, setSelectCategory] = useState<string[]>([]);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<{ isError: boolean, msg: string }>({ isError: false, msg: '' });
+
+    const pageCount = Math.ceil(totalProducts / limit);
 
     /**
      * Fetch categories on component mount
@@ -74,6 +82,14 @@ export default function ProductPage() {
     useEffect(() => {
         document.title = "Inventory Management";
     }, []);
+
+    useEffect(() => {
+        if (productError) {
+            setError({ isError: true, msg: productError });
+        } else {
+            setError({ isError: false, msg: '' });
+        }
+    }, [productError]);
 
     /**
      * Table headers state
@@ -98,31 +114,23 @@ export default function ProductPage() {
      * It updates the products state variable with the fetched data
      * and handles loading and error states.
      */
+
+
     useEffect(() => {
-        console.log("Fetching products")
-        setIsLoading(true);
-        fetchProducts({
-            page,
-            limit,
-            sortKey,
-            asc,
-            term,
-            category,
-            priceMin,
-            priceMax,
-            inStock,
-        }).then(result => {
-            setProducts(result.rows)
-            setPageCount(Math.ceil(result.total / limit))
-            setPaginationNumber(page)
-            setError({ isError: false, msg: '' });
-        }).catch(err => {
-            console.error(err);
-            setError({ isError: true, msg: 'Network error. Please check your connection.' });
-        }).finally(() => {
-            setIsLoading(false);
-        })
-    }, [page, limit, sortKey, asc, term, category, priceMin, priceMax, inStock])
+        if (productStatus !== 'loading') {
+            dispatch(fetchFilteredProducts({
+                page,
+                limit,
+                sortKey,
+                asc,
+                term,
+                category,
+                priceMin,
+                priceMax,
+                inStock
+            }));
+        }
+    }, [page, limit, sortKey, asc, term, category, priceMin, priceMax, inStock]);
 
     /**
      * Warning memoization
@@ -131,7 +139,6 @@ export default function ProductPage() {
      * if there are no products matching the current filters or search term.
      */
     const warning = useMemo(() => {
-        console.log("Warning check called");
         let warningMsg = '';
         if (products.length === 0) {
             switch (sortKey) {
@@ -214,7 +221,7 @@ export default function ProductPage() {
      */
     const handleMinPriceFilter = () => (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
-        setPriceMin(Number(value));
+        setPriceMin(value ? Number(value) : undefined);
         setPage(1);
         setPaginationNumber(1);
     }
@@ -227,7 +234,7 @@ export default function ProductPage() {
      */
     const handleMaxPriceFilter = () => (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
-        setPriceMax(Number(value));
+        setPriceMax(value ? Number(value) : undefined);
         setPage(1);
         setPaginationNumber(1);
     }
@@ -263,6 +270,7 @@ export default function ProductPage() {
             setAsc(true);
         }
     }
+
 
     return (
         <div className="">
@@ -322,16 +330,18 @@ export default function ProductPage() {
                             </td>
                             <td>
                                 <div className="join">
-                                    <input type="number" placeholder="Min" className="input" onChange={handleMinPriceFilter()} />
-                                    <input type="number" placeholder="Max" className="input" onChange={handleMaxPriceFilter()} />
+                                    <input type="number" placeholder="Min" className="input" onBlur={handleMinPriceFilter()} />
+                                    <input type="number" placeholder="Max" className="input" onBlur={handleMaxPriceFilter()} />
                                 </div>
                             </td>
                             <td><input type="checkbox" className="toggle" onChange={handleInStock()} />In stock</td>
-                            <td></td>
+                            <td>
+                                <button className="btn btn-outline btn-sm" >Clear Filters</button>
+                            </td>
                         </tr>
                         {/* row 1 */}
 
-                        {isLoading ? (
+                        {productStatus === 'loading' ? (
                             Array.from({ length: 5 }).map((_, i) => (
                                 <tr key={`s-${i}`}>
                                     <th><div className="skeleton h-4 w-6" /></th>
@@ -357,9 +367,8 @@ export default function ProductPage() {
                             <td colSpan={2}>
                                 <div className="join">
                                     {[...Array(pageCount)].map((_, i) => (
-                                        <>
-                                            <button className={`join-item btn ${page === i + 1 ? 'btn-active' : ''}`} onClick={() => setPage(i + 1)}>{i + 1}</button>
-                                        </>
+                                        <button className={`join-item btn ${page === i + 1 ? 'btn-active' : ''}`} onClick={() => setPage(i + 1)}>{i + 1}</button>
+
                                     )
 
                                     )}

@@ -30,10 +30,12 @@ npm run dev
 
 **Links**
 The default page can be viewed via below link on local server- 
-http://localhost:5173/productPage
+http://localhost:5173/productPage -- Without Redux implementation
+http://localhost:5173/reduxProductPage -- With Redux implementation and pending points
 
 Vercel server link is as below-
 https://long-run-demo.vercel.app/productPage
+https://long-run-demo.vercel.app/reduxProductPage -- With Redux implementation and pending points
 
 **Supabase Setup (brief)**
 - Create a Supabase project and a `products` table with columns matching `ProductDetails` used in the app (e.g., `id`, `name`, `category`, `price`, `stock_quantity`, `created_at`).

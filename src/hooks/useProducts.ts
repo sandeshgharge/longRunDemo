@@ -1,3 +1,4 @@
+import type { ProductFilterEntity } from '../features/product/productFilterEntity';
 import { supabase } from '../lib/supabase'
 export type SortKey =
   | 'name'
@@ -7,11 +8,7 @@ export type SortKey =
   | 'category';
 
 
-export async function fetchProducts(opts: {
-    page: number; limit: number; term?: string; category?: string;
-    priceMin?: number; priceMax?: number; inStock?: boolean;
-    sortKey: SortKey; asc: boolean;
-}) {
+export async function fetchProducts(opts: ProductFilterEntity) {
     const { page, limit, term, category, priceMin, priceMax, inStock, sortKey, asc } = opts
     const from = (page - 1) * limit; const to = from + limit - 1
 
@@ -23,7 +20,7 @@ export async function fetchProducts(opts: {
     if (priceMax != null) q = q.lte('price', priceMax)
     if (inStock != null) q = inStock ? q.gt('stock_quantity', 0) : q.eq('stock_quantity', 0)
 
-    q = q.order(sortKey, { ascending: asc }).range(from, to)
+    q = q.order(sortKey, { ascending: asc? asc : true }).range(from, to)
     
     const { data, count, error } = await q
     if (error) throw error
