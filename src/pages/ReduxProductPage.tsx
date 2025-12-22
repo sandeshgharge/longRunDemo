@@ -7,6 +7,9 @@ import { SearchField } from "../components/searchField";
 
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchFilteredProducts, selectAllProducts, selectProductStatus, selectProductError, selectProductCount } from "../features/product/productSlice";
+import { writeParams } from "../lib/params";
+
+import { useSearchParams } from 'react-router-dom';
 
 /**
  * Utility function to generate a range of numbers
@@ -39,6 +42,7 @@ interface TableHeader {
 
 export default function ReduxProductPage() {
 
+    const [searchParams, setSearchParams] = useSearchParams();
     const dispatch = useDispatch();
     const products = useSelector(selectAllProducts);
     const productStatus = useSelector(selectProductStatus);
@@ -49,17 +53,21 @@ export default function ReduxProductPage() {
 
     const limit = 10;
     const [sortKey, setSortKey] = useState<SortKey>("name");
-    const [asc, setAsc] = useState(true);
-    const [term, setTerm] = useState<string | undefined>(undefined);
-    const [category, setCategory] = useState<string | undefined>(undefined);
-    const [priceMin, setPriceMin] = useState<number | undefined>(undefined);
-    const [priceMax, setPriceMax] = useState<number | undefined>(undefined);
-    const [inStock, setInStock] = useState<boolean | undefined>(undefined);
+    const [asc, setAsc] = useState(searchParams.get("asc") === "0" ? false : true);
+    const [term, setTerm] = useState<string | undefined>(searchParams.get("q") || undefined);
+    const [category, setCategory] = useState<string | undefined>(searchParams.get("category") || undefined);
+    const [priceMin, setPriceMin] = useState<number | undefined>(searchParams.get("min") ? Number(searchParams.get("min")) : undefined);
+    const [priceMax, setPriceMax] = useState<number | undefined>(searchParams.get("max") ? Number(searchParams.get("max")) : undefined);
+    const [inStock, setInStock] = useState<boolean | undefined>(searchParams.get("stock") === "in" ? true : false);
     const [paginationNumber, setPaginationNumber] = useState<number>(0);
     const [selectCategory, setSelectCategory] = useState<string[]>([]);
     const [error, setError] = useState<{ isError: boolean, msg: string }>({ isError: false, msg: '' });
 
+
+
     const pageCount = Math.ceil(totalProducts / limit);
+
+
 
     /**
      * Fetch categories on component mount
@@ -117,6 +125,7 @@ export default function ReduxProductPage() {
 
 
     useEffect(() => {
+        console.log("Fetching products with params:");
         if (productStatus !== 'loading') {
             dispatch(fetchFilteredProducts({
                 page,
@@ -129,6 +138,17 @@ export default function ReduxProductPage() {
                 priceMax,
                 inStock
             }));
+            const newParams = writeParams({
+                term: term || '',
+                category: category || 'all',
+                priceMin,
+                priceMax,
+                inStock: inStock || false,
+                sortKey,
+                asc,
+                page
+            }, new URLSearchParams(window.location.search));
+            setSearchParams(newParams);
         }
     }, [page, limit, sortKey, asc, term, category, priceMin, priceMax, inStock]);
 
@@ -221,7 +241,7 @@ export default function ReduxProductPage() {
      */
     const handleMinPriceFilter = () => (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
-        setPriceMin(value ? Number(value) : undefined);
+        setPriceMin(Number(value) > 0 ? Number(value) : undefined);
         setPage(1);
         setPaginationNumber(1);
     }
@@ -234,7 +254,7 @@ export default function ReduxProductPage() {
      */
     const handleMaxPriceFilter = () => (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
-        setPriceMax(value ? Number(value) : undefined);
+        setPriceMax(Number(value) > 0 ? Number(value) : undefined);
         setPage(1);
         setPaginationNumber(1);
     }
@@ -250,7 +270,7 @@ export default function ReduxProductPage() {
      */
     const handleInStock = () => (e: React.ChangeEvent<HTMLInputElement>) => {
         const checked = e.target.checked;
-        setInStock(checked ? true : undefined);
+        setInStock(checked);
         setPage(1);
         setPaginationNumber(1);
     }
@@ -288,7 +308,7 @@ export default function ReduxProductPage() {
 
                 }
 
-                {warning.isWarning && !error.isError &&
+                {productStatus === "idle" && warning.isWarning && !error.isError &&
                     <div role="alert" className="alert alert-warning">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -296,97 +316,101 @@ export default function ReduxProductPage() {
                         <span>{warning.msg}</span>
                     </div>
                 }
-                <table className="table">
-                    {/* head */}
-                    <thead>
-                        <tr>
-                            <th></th>
-                            {tableHeaders.map((header) => (
-                                <th key={header.key} onClick={handleSorting(header.key as SortKey)}>
-                                    <div className="flex items-center gap-1">
-                                        {header.label} <SortIcon active={sortKey === header.key} dir={sortKey === header.key ? (asc ? "asc" : "desc") : "asc"} />
+                <form action="">
+
+
+                    <table className="table">
+                        {/* head */}
+                        <thead>
+                            <tr>
+                                <th></th>
+                                {tableHeaders.map((header) => (
+                                    <th key={header.key} onClick={handleSorting(header.key as SortKey)}>
+                                        <div className="flex items-center gap-1">
+                                            {header.label} <SortIcon active={sortKey === header.key} dir={sortKey === header.key ? (asc ? "asc" : "desc") : "asc"} />
+                                        </div>
+                                    </th>
+                                )
+                                )}
+
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {/* filter row */}
+
+                            <tr>
+                                <td></td>
+                                <td>
+                                    <SearchField handleSearch={handleNameSearch} value={term?.toString()} />
+                                </td>
+                                <td>
+                                    <select defaultValue="Select Category" className="select" onChange={handleCategoryChange()}>
+                                        <option key={undefined}>Select Category</option>
+                                        {selectCategory.map((cat) => (
+                                            <option key={cat} selected={category === cat}>{cat}</option>
+                                        ))}
+                                    </select>
+                                </td>
+                                <td>
+                                    <div className="join">
+                                        <input type="number" placeholder="Min" className="input" onBlur={handleMinPriceFilter()} value={priceMin? priceMin.toString() : ''} />
+                                        <input type="number" placeholder="Max" className="input" onBlur={handleMaxPriceFilter()} value={priceMax? priceMax.toString() : ''} />
                                     </div>
-                                </th>
-                            )
-                            )}
+                                </td>
+                                <td><input type="checkbox" className="toggle" onChange={handleInStock()} checked={inStock !== null && inStock} />In stock</td>
+                                <td>
+                                    <button className="btn btn-outline btn-sm">Clear Filters</button>
+                                </td>
+                            </tr>
+                            {/* row 1 */}
 
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {/* filter row */}
+                            {productStatus === 'loading' ? (
+                                Array.from({ length: 5 }).map((_, i) => (
+                                    <tr key={`s-${i}`}>
+                                        <th><div className="skeleton h-4 w-6" /></th>
+                                        <td><div className="skeleton h-4 w-40" /></td>
+                                        <td><div className="skeleton h-4 w-32" /></td>
+                                        <td><div className="skeleton h-4 w-20" /></td>
+                                        <td><div className="skeleton h-4 w-16" /></td>
+                                        <td><div className="skeleton h-4 w-28" /></td>
+                                    </tr>
+                                ))
+                            ) :
+                                products.map((product, index) => (
+                                    <tr key={product.id} className={'hover:bg-base-300'}>
+                                        <th>{index + 1}</th>
+                                        <td>{product.name}</td>
+                                        <td>{product.category}</td>
+                                        <td>{product.price}</td>
+                                        <td>{product.stock_quantity}</td>
+                                        <td>{product.created_at}</td>
+                                    </tr>
+                                ))}
+                            <tr>
+                                <td colSpan={2}>
+                                    <div className="join">
+                                        {[...Array(pageCount)].map((_, i) => (
+                                            <button className={`join-item btn ${page === i + 1 ? 'btn-active' : ''}`} onClick={() => setPage(i + 1)}>{i + 1}</button>
 
-                        <tr>
-                            <td></td>
-                            <td>
-                                <SearchField handleSearch={handleNameSearch} />
-                            </td>
-                            <td>
-                                <select defaultValue="Select Category" className="select" onChange={handleCategoryChange()}>
-                                    <option key={undefined}>Select Category</option>
-                                    {selectCategory.map((category) => (
-                                        <option key={category}>{category}</option>
-                                    ))}
-                                </select>
-                            </td>
-                            <td>
-                                <div className="join">
-                                    <input type="number" placeholder="Min" className="input" onBlur={handleMinPriceFilter()} />
-                                    <input type="number" placeholder="Max" className="input" onBlur={handleMaxPriceFilter()} />
-                                </div>
-                            </td>
-                            <td><input type="checkbox" className="toggle" onChange={handleInStock()} />In stock</td>
-                            <td>
-                                <button className="btn btn-outline btn-sm" >Clear Filters</button>
-                            </td>
-                        </tr>
-                        {/* row 1 */}
+                                        )
 
-                        {productStatus === 'loading' ? (
-                            Array.from({ length: 5 }).map((_, i) => (
-                                <tr key={`s-${i}`}>
-                                    <th><div className="skeleton h-4 w-6" /></th>
-                                    <td><div className="skeleton h-4 w-40" /></td>
-                                    <td><div className="skeleton h-4 w-32" /></td>
-                                    <td><div className="skeleton h-4 w-20" /></td>
-                                    <td><div className="skeleton h-4 w-16" /></td>
-                                    <td><div className="skeleton h-4 w-28" /></td>
-                                </tr>
-                            ))
-                        ) :
-                            products.map((product, index) => (
-                                <tr key={product.id} className={'hover:bg-base-300'}>
-                                    <th>{index + 1}</th>
-                                    <td>{product.name}</td>
-                                    <td>{product.category}</td>
-                                    <td>{product.price}</td>
-                                    <td>{product.stock_quantity}</td>
-                                    <td>{product.created_at}</td>
-                                </tr>
-                            ))}
-                        <tr>
-                            <td colSpan={2}>
-                                <div className="join">
-                                    {[...Array(pageCount)].map((_, i) => (
-                                        <button className={`join-item btn ${page === i + 1 ? 'btn-active' : ''}`} onClick={() => setPage(i + 1)}>{i + 1}</button>
+                                        )}
+                                    </div>
 
-                                    )
+                                </td>
+                                <td></td>
+                                <td></td>
 
-                                    )}
-                                </div>
-
-                            </td>
-                            <td></td>
-                            <td></td>
-
-                            <td colSpan={2}>
-                                <div className="join grid grid-cols-2 justify-end">
-                                    <button className="join-item btn btn-outline" onClick={() => handlePageClick(page - 1, 0)}>Previous page</button>
-                                    <button className="join-item btn btn-outline" onClick={() => handlePageClick(page + 1, 0)}>Next</button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                                <td colSpan={2}>
+                                    <div className="join grid grid-cols-2 justify-end">
+                                        <button className="join-item btn btn-outline" onClick={() => handlePageClick(page - 1, 0)}>Previous page</button>
+                                        <button className="join-item btn btn-outline" onClick={() => handlePageClick(page + 1, 0)}>Next</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </form>
             </div>
         </div>
     )

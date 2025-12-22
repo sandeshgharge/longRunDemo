@@ -18,9 +18,9 @@ export async function fetchProducts(opts: ProductFilterEntity) {
     if (category && category !== 'all') q = q.eq('category', category)
     if (priceMin != null) q = q.gte('price', priceMin)
     if (priceMax != null) q = q.lte('price', priceMax)
-    if (inStock != null) q = inStock ? q.gt('stock_quantity', 0) : q.eq('stock_quantity', 0)
+    if (inStock != null) q = inStock ? q.gt('stock_quantity', 0) : q.gte('stock_quantity', 0)
 
-    q = q.order(sortKey, { ascending: asc? asc : true }).range(from, to)
+    q = q.order(sortKey, { ascending: asc? asc : false }).range(from, to)
     
     const { data, count, error } = await q
     if (error) throw error

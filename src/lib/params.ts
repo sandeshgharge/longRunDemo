@@ -1,6 +1,6 @@
 export function readParams(sp: URLSearchParams) {
     return {
-        q: sp.get('q') || '',
+        term: sp.get('q') || '',
         category: sp.get('category') || 'all',
         priceMin: sp.get('min') ? Number(sp.get('min')) : undefined,
         priceMax: sp.get('max') ? Number(sp.get('max')) : undefined,
@@ -17,7 +17,7 @@ export function writeParams(next: Partial<ReturnType<typeof readParams>>, prev: 
         if (v === undefined || v === '' || v === false) sp.delete(k)
         else sp.set(k, String(v))
     }
-    set('q', next.q)
+    set('q', next.term == '' ? undefined : next.term)
     set('category', next.category && next.category !== 'all' ? next.category : undefined)
     set('min', next.priceMin)
     set('max', next.priceMax)

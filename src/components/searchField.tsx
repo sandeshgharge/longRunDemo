@@ -1,8 +1,9 @@
 
 interface SearchFieldProps {
     handleSearch: (event: React.ChangeEvent<HTMLInputElement>) => void;
+    value?: string;
 }
-export function SearchField({ handleSearch }: SearchFieldProps) {
+export function SearchField({ handleSearch, value }: SearchFieldProps) {
 
 
     return (
@@ -20,7 +21,7 @@ export function SearchField({ handleSearch }: SearchFieldProps) {
                         <path d="m21 21-4.3-4.3"></path>
                     </g>
                 </svg>
-                <input type="search" className="grow" placeholder="Search" onChange={handleSearch} />
+                <input type="search" className="grow" placeholder="Search" onChange={handleSearch} value={value} />
 
             </label>
         </div>
